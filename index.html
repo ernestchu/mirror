@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mirror Web App</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+        }
+        video {
+            width: 100%;
+            height: auto;
+        }
+        .flipped {
+            transform: scaleX(-1);
+        }
+    </style>
+</head>
+<body>
+    <video id="mirror" autoplay playsinline></video>
+    <script>
+        let currentFacingMode = 'environment';
+
+        async function startCamera() {
+            const video = document.getElementById('mirror');
+            try {
+                const constraints = { video: { facingMode: currentFacingMode } };
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                const track = stream.getVideoTracks()[0];
+                const settings = track.getSettings();
+
+                if (settings.facingMode === 'user') {
+                    video.classList.add('flipped');
+                } else {
+                    video.classList.remove('flipped');
+                }
+
+                video.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing the camera: ", err);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", startCamera);
+
+        let lastTap = 0;
+        document.body.addEventListener("touchend", (event) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 300 && tapLength > 0) { // Detect double-tap
+                currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+                startCamera();
+            }
+            lastTap = currentTime;
+        });
+    </script>
+</body>
+</html>
